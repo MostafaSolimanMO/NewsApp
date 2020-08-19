@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -17,6 +18,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.daii.udacitynewsapp.Adapters.NewsAdapter;
 import com.example.daii.udacitynewsapp.R;
 import com.example.daii.udacitynewsapp.ViewModel.NewsViewModel;
+
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity implements NewsAdapter.NewsOnClick {
 
@@ -35,7 +38,47 @@ public class MainActivity extends AppCompatActivity implements NewsAdapter.NewsO
         recyclerView.setAdapter(mAdapter);
 
         viewModel = new ViewModelProvider(this, new ViewModelProvider.AndroidViewModelFactory(getApplication())).get(NewsViewModel.class);
-        viewModel.getAllArticle().observe(this, articles -> mAdapter.setNewsData(articles));
+        viewModel.getAllArticle().observe(this, articles -> {
+            mAdapter.setNewsData(articles);
+            new ItemTouchHelper(new ItemTouchHelper.Callback() {
+                @Override
+                public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                    int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
+                    return makeMovementFlags(dragFlags, 0);
+                }
+
+                @Override
+                public boolean isItemViewSwipeEnabled() {
+                    return false;
+                }
+
+
+                @Override
+                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                    if (viewHolder.getAdapterPosition() < target.getAdapterPosition()) {
+                        for (int i = viewHolder.getAdapterPosition(); i < target.getAdapterPosition(); i++) {
+                            Collections.swap(articles, i, i + 1);
+                        }
+                    } else {
+                        for (int i = viewHolder.getAdapterPosition(); i > target.getAdapterPosition(); i--) {
+                            Collections.swap(articles, i, i - 1);
+                        }
+                    }
+                    mAdapter.notifyItemMoved(viewHolder.getAdapterPosition(), target.getAdapterPosition());
+                    return true;
+                }
+
+                @Override
+                public boolean isLongPressDragEnabled() {
+                    return true;
+                }
+
+                @Override
+                public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+
+                }
+            }).attachToRecyclerView(recyclerView);
+        });
         SwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.refresh);
         swipeRefreshLayout.setOnRefreshListener(() -> {
             callData();
@@ -44,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements NewsAdapter.NewsO
     }
 
     private void callData() {
-        viewModel.retry();
+        viewModel.Refresh();
         viewModel.getAllArticle().observe(this, articles -> mAdapter.setNewsData(articles));
     }
 

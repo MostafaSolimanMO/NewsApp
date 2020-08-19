@@ -15,7 +15,6 @@ public class NewsViewModel extends AndroidViewModel {
     Application application;
     private NewsRepository newsRepository;
     private MutableLiveData<List<Article>> article;
-    private Boolean mRetry = false;
 
     public NewsViewModel(Application application) {
         super(application);
@@ -28,7 +27,7 @@ public class NewsViewModel extends AndroidViewModel {
         return article;
     }
 
-    public void retry() {
+    public void Refresh() {
         newsRepository = new NewsRepository(application);
         article = newsRepository.getMutableLiveData();
     }
